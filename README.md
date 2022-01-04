@@ -4,6 +4,9 @@ ArcPy implementation of the soil water model for use in a lecture at Goethe Univ
 # creator
 Initial creator is Florian Herz, who developed under the supervision of Hannes Müller Schmied this implementation. The implementation was funded by the Goethe University Frankfurt, Germany within an e-learning Förderfonds-activity. The initial developed model version was modified several times by Hannes Müller Schmied (see the .py document).
 
+# note to the implementation
+Using a python toolbar instead of a .tbx is a better solution but due to the lack of time, this python script and the (not in an IDE editable) tbx need to be stored at one place that it can be found in ArcGIS. 
+
 # SWM in Arcpy Hinweise 
 
 ## Relative Pfadnamen 

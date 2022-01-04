@@ -22,6 +22,9 @@ N_Messstationen- vector (points); Stations for precipitation measuring. The attr
 Haude_[1-12] - one file per month, Haude parameter
 """
 """History
+Version 2.3 (Hannes Müller Schmied) 01/2022
+- final output is now in m3 s-1
+- new option to store cumulated raster files (e.g. for calculating annual runoff coefficients)
 Version 2.2 (Hannes Müller Schmied) 03/2021
 - runoff for water bodies is not 0 but precipitation in the case P<=PET
 - negative soil storage is avoided in any case (set to 0 if negative)
@@ -36,13 +39,13 @@ Version 2.1 (Hannes Müller Schmied) 02/2021
 __author__ = "Florian Herz"
 __copyright__ = "Copyright 2019, FH"
 __credits__ = ["Florian Herz", "Dr. Hannes Müller Schmied", "Dr. Irene Marzolff"]
-__version__ = "2.1"
-__maintainer__ = "Florian Herz"
-__email__ = "florian13.herz@googlemail.com"
+__version__ = "2.3"
+__maintainer__ = "Hannes Müller Schmied"
+__email__ = "hannes.mueller.schmied@em.uni-frankfurt.de"
 __status__ = "Production"
 
 ########################################################################################################################
-#  import the modules and acitvate arc gis extensions
+#  import the modules and activate arc gis extensions
 ########################################################################################################################
 
 import arcpy
@@ -170,15 +173,15 @@ def get_soilwater(water_raster, s_pre_raster, p_raster, aet_raster, runoff_raste
 
 def get_q_m3(runoff_raster, rastercellsize):
     """
-    Calculates the total runoff of the basin in m^3 by converting the runoff-raster into an array.
+    Calculates the streamflow of the basin in m^3 s^{-1} by converting the runoff-raster into an array.
     :param runoff_raster: output of the function "get_runoff" (::type: raster)
     :param rastercellsize: raster cellsize (::type: float)
-    :return: total runoff by basin in m^3 (::type: float)
+    :return: streamflow by basin in m^3 s^{-1} (::type: float)
     """
     array = arcpy.RasterToNumPyArray(runoff_raster, nodata_to_value=0)
     r_sum = array.sum()
-    r_m3 = (r_sum * 0.001 * rastercellsize ** 2)
-    arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Q in m3 berechnet.")
+    r_m3 = (r_sum * 0.001 * rastercellsize ** 2 / 24 / 60 / 60)
+    arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Q in m3 s-1 berechnet.")
 
     return r_m3
 
@@ -199,13 +202,22 @@ def delete_raster(bool_pet, bool_aet, bool_p, bool_r, bool_s, parameter_safe, ye
         if not i[1]:
             arcpy.Delete_management("{}_rp{}_c{}_{}.tif".format(i[0], parameter_safe[0], parameter_safe[1], yesterday))
 
+def delete_sum_raster(parameter_safe, yesterday):
+    """
+    Deletes the sum raster datasets created by the functions above if selected from the previous day.
+    :param parameter_safe: values of the variable combination (::type: tuple)
+    :param yesterday: previous daily ID (::type: integer)
+    :return:
+    """
+    for i in [("PET"), ("AET"), ("IDW"), ("R"), ("S")]:
+        arcpy.Delete_management("{}_sum_rp{}_c{}_{}_sumday.tif".format(i, parameter_safe[0], parameter_safe[1], yesterday))
 
 def write_to_table(resultspace, tablename, result, date):
     """
     Writes the result value and the date into the current result table.
     :param resultspace: working directory (::type: sting)
     :param tablename: name of the result table (::type: string)
-    :param result: total runoff by basin in m^3  (::type: float)
+    :param result: total streamflow by basin in m^3 s-1 (::type: float)
     :param date: daily ID (::type: integer)
     :return:
     """
@@ -240,6 +252,8 @@ id_yesterday = start = int(arcpy.GetParameterAsText(4))  # datatype: long #  def
 end = int(arcpy.GetParameterAsText(5))  # datatype: long #  default: 20041231
 s_init = ExtractByMask(Raster(arcpy.GetParameterAsText(3)), basin)  # datatype: geodataset
 #  default: C:\HiWi_Hydro-GIS\MTP_HydroGIS_Basisdaten.gdb\FK_von_L
+sum_start = int(arcpy.GetParameterAsText(23))  # datatype: long #  default: 20040101
+sum_end = int(arcpy.GetParameterAsText(24))  # datatype: long #  default: 20041201
 rp_factor_min = float(arcpy.GetParameterAsText(6).replace(",", "."))  # datatype: double #  default: 0.85
 rp_factor_max = float(arcpy.GetParameterAsText(16).replace(",", "."))  # datatype: double #  default: 0.85
 rp_factor_step = float(arcpy.GetParameterAsText(17).replace(",", "."))  # datatype: double #  default: 0.05
@@ -247,6 +261,11 @@ c_min = int(arcpy.GetParameterAsText(7))   # datatype: long #  default: 150
 c_max = int(arcpy.GetParameterAsText(19))  # datatype: long #  default: 150
 c_step = int(arcpy.GetParameterAsText(20))  # datatype: long #  default: 50
 idw_exponent = float(arcpy.GetParameterAsText(21).replace(",", "."))  # datatype: double #  default: 1
+check_raster_sum = arcpy.GetParameterAsText(22)  # datatype: boolean #  default: false
+if check_raster_sum == 'false':
+    check_raster_sum = False
+else:
+    check_raster_sum = True
 check_pet = arcpy.GetParameterAsText(10)  # datatype: boolean #  default: true
 if check_pet == 'false':
     check_pet = False
@@ -361,7 +380,6 @@ for z in range(len(rp_factor)):
         outname2 = "_s{}_e{}".format(int(start), int(end))
         arcpy.AddMessage("outname2={}".format(outname2))
         result_path = arcpy.CreateTable_management(workspace, outname1)
-        #result_path = arcpy.CreateTable(workspace, outname)#arcpy.CreateTable_management(r'{}\Ergebnistabellen.gdb'.format(workspace), outname)
         arcpy.AddField_management(result_path, "Datum", "DATE")
         arcpy.AddField_management(result_path, "Q", "DOUBLE")
         arcpy.DeleteField_management(result_path, ["OBJECTID","FIELD1"])
@@ -390,6 +408,44 @@ for z in range(len(rp_factor)):
 
                 s_pre = s  # memory for soilwater from the previous day
                 write_to_table(workspace, outname1, runoff_m3, str(id_day))  # writing the runoff into the result table
+                if check_raster_sum == True:
+                    if sum_start <= id_day <= sum_end:
+                        if sum_start == id_day:
+                            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Aufsummierung der Raster beginnt.")
+                            ndays = 1
+                            sum_pet = pet
+                            sum_aet = aet
+                            sum_precipitation = precipitation
+                            sum_runoff = runoff
+                            sum_s = s
+                        elif sum_end == id_day:
+                            sum_s = sum_s / ndays  # storage as mean value
+                            sum_aet = sum_aet + aet
+                            sum_aet.save("AET_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start, sum_end))
+                            sum_pet = sum_pet + pet
+                            sum_pet.save("PET_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start, sum_end))
+                            sum_precipitation = sum_precipitation + precipitation
+                            sum_precipitation.save("IDW_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start, sum_end))
+                            sum_runoff = sum_runoff + runoff
+                            sum_runoff.save("R_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start, sum_end))
+                            sum_s = sum_s + s
+                            sum_s.save("S_mean_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start, sum_end))
+                            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Aufsummierte Raster geschrieben.")
+                        else:
+                            ndays = ndays + 1
+                            sum_pet = sum_pet + pet
+                            sum_pet.save("PET_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                            sum_aet = sum_aet + aet
+                            sum_aet.save("AET_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                            sum_precipitation = sum_precipitation + precipitation
+                            sum_precipitation.save("IDW_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                            sum_runoff = sum_runoff + runoff
+                            sum_runoff.save("R_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                            sum_s = sum_s + s
+                            sum_s.save("S_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                            if ndays > 2:
+                                delete_sum_raster(parameter_day, id_yesterday)
+
                 # deletes the calculated rasters above if selected
                 if not id_yesterday == start:
                     delete_raster(check_pet, check_aet, check_p, check_r, check_s, parameter_day, id_yesterday)
@@ -402,9 +458,13 @@ for z in range(len(rp_factor)):
         arcpy.TableToTable_conversion(result_path, workspace, outname1+outname2+".csv")
         # deleting the rasters of the first day of the current variable combination
         delete_raster(check_pet, check_aet, check_p, check_r, check_s, parameter_day, start)
+        if check_raster_sum == True:
+            delete_sum_raster(parameter_day, sum_start)
         # deleting the rasters of the last day of the previous variable combination
         if not parameter_yesterday == parameter_day:
             delete_raster(check_pet, check_aet, check_p, check_r, check_s, parameter_yesterday, end)
+            if check_raster_sum == True:
+                delete_sum_raster(parameter_yesterday, sum_end-1)
         parameter_yesterday = parameter_day  # memory for the value of the last combination of variables
         arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Fertig mit c={}".format(c[y]))
     arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Fertig mit rp={}".format(rp_factor[z]))
@@ -412,6 +472,8 @@ for z in range(len(rp_factor)):
 
 # deleting the rasters of the last day of the last variable combination
 delete_raster(check_pet, check_aet, check_p, check_r, check_s, parameter_day, end)
+if check_raster_sum == True:
+    delete_sum_raster(parameter_day, sum_end-1)
 arcpy.Delete_management(result_path)
 arcpy.RefreshCatalog(workspace)
 arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Modellierung abgeschlossen.")
