@@ -61,6 +61,7 @@ for (r in RP_par) { #loop over RP parameter values
          #in case the csv is not there, skip this combination
          if (!file.exists(paste0("Q_rp",r*100,"_c",c,"_idw",i*100,"_s",DateInit_year,sprintf("%02d", DateInit_month),sprintf("%02d", DateInit_day),"_e",DateEnd_year,sprintf("%02d", DateEnd_month),sprintf("%02d", DateEnd_day),".csv"))) {
             print(paste0("Q_rp",r*100,"_c",c,"_idw",i*100,"_s",DateInit_year,sprintf("%02d", DateInit_month),sprintf("%02d", DateInit_day),"_e",DateEnd_year,sprintf("%02d", DateEnd_month),sprintf("%02d", DateEnd_day),".csv"," does not exist, therefore skipping"))
+            n <- n -1 #to set n back
             next
          } else {
             #read in the data of this combination and save it to the matrix in a column

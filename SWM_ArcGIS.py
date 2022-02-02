@@ -22,6 +22,8 @@ N_Messstationen- vector (points); Stations for precipitation measuring. The attr
 Haude_[1-12] - one file per month, Haude parameter
 """
 """History
+Version 2.4 (Hannes Müller Schmied) 01/2022
+- added separate output of soilrunoff and overflow (e.g. to determine the dominant component)
 Version 2.3 (Hannes Müller Schmied) 01/2022
 - final output is now in m3 s-1
 - new option to store cumulated raster files (e.g. for calculating annual runoff coefficients)
@@ -39,7 +41,7 @@ Version 2.1 (Hannes Müller Schmied) 02/2021
 __author__ = "Florian Herz"
 __copyright__ = "Copyright 2019, FH"
 __credits__ = ["Florian Herz", "Dr. Hannes Müller Schmied", "Dr. Irene Marzolff"]
-__version__ = "2.3"
+__version__ = "2.4"
 __maintainer__ = "Hannes Müller Schmied"
 __email__ = "hannes.mueller.schmied@em.uni-frankfurt.de"
 __status__ = "Production"
@@ -150,6 +152,39 @@ def get_runoff(water_raster, lambda_param, wp_raster, p_raster, s_pre_raster, fc
 
     return r
 
+def get_rsoil(water_raster, lambda_param, wp_raster, s_pre_raster, date, parameter_safe):
+    """
+    Calculates a raster dataset of the land runoff from soil (0 for water cells).
+    :param water_raster: mask of water cells (:type: raster)
+    :param lambda_param: Lambda value (:type: raster)
+    :param wp_raster: wilting point (wp) (:type: raster)
+    :param s_pre_raster: soilwater content of the previous day (:type: raster)
+    :param date: daily ID (:type: integer)
+    :param parameter_safe: values of the variable combination (:type: tuple)
+    :return: runoff from soil according to Glugla (1969) (:type: raster)
+    """
+    r = Con(water_raster == 1, 0, (lambda_param * ((s_pre_raster - wp_raster) ** 2)))
+    r.save("Rsoil_rp{}_c{}_{}.tif".format(parameter_safe[0], parameter_safe[1], date))
+    arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Soil runoff (Glugla 1969) je Rasterzelle berechnet.")
+
+    return r
+
+def get_roverflow(water_raster, p_raster, s_pre_raster, fc_raster, date, parameter_safe):
+    """
+    Calculates a raster dataset of the overflow runoff, defined only for land areas whereas in water cells overflow of 0 is given.
+    :param water_raster: mask of water cells (:type: raster)
+    :param p_raster: output of the function "get_precipitation" (:type: raster)
+    :param s_pre_raster: soilwater content of the previous day (:type: raster)
+    :param fc_raster: field capacity (fc) (:type: raster)
+    :param date: daily ID (:type: integer)
+    :param parameter_safe: values of the variable combination (:type: tuple)
+    :return: overflow runoff (:type: raster)
+    """
+    r = Con(water_raster == 1, 0, Con(p_raster + s_pre_raster > fc_raster, p_raster + s_pre_raster - fc_raster, 0))
+    r.save("Roverflow_rp{}_c{}_{}.tif".format(parameter_safe[0], parameter_safe[1], date))
+    arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "R overflow je Rasterzelle berechnet.")
+
+    return r
 
 def get_soilwater(water_raster, s_pre_raster, p_raster, aet_raster, runoff_raster, date, parameter_safe):
     """
@@ -186,7 +221,7 @@ def get_q_m3(runoff_raster, rastercellsize):
     return r_m3
 
 
-def delete_raster(bool_pet, bool_aet, bool_p, bool_r, bool_s, parameter_safe, yesterday):
+def delete_raster(bool_pet, bool_aet, bool_p, bool_r, bool_s, bool_rs, bool_ro, parameter_safe, yesterday):
     """
     Deletes the raster datasets created by the functions above if selected from the previous day.
     :param bool_pet: boolean to delete the PET-raster (::type: boolean)
@@ -194,11 +229,13 @@ def delete_raster(bool_pet, bool_aet, bool_p, bool_r, bool_s, parameter_safe, ye
     :param bool_p: boolean to delete the precipitation-raster (::type: boolean)
     :param bool_r: boolean to delete the runoff-raster (::type: boolean)
     :param bool_s: boolean to delete the soilwater-raster (::type: boolean)
+    :param bool_rs: boolean to delete the runoff from soil -raster (::type: boolean)
+    :param bool_ro: boolean to delete the overflow runoff-raster (::type: boolean)
     :param parameter_safe: values of the variable combination (::type: tuple)
     :param yesterday: previous daily ID (::type: integer)
     :return: 
     """
-    for i in [("PET", bool_pet), ("AET", bool_aet), ("IDW", bool_p), ("R", bool_r), ("S", bool_s)]:
+    for i in [("PET", bool_pet), ("AET", bool_aet), ("IDW", bool_p), ("R", bool_r), ("S", bool_s), ("Rsoil", bool_rs), ("Roverflow", bool_ro)]:
         if not i[1]:
             arcpy.Delete_management("{}_rp{}_c{}_{}.tif".format(i[0], parameter_safe[0], parameter_safe[1], yesterday))
 
@@ -209,7 +246,7 @@ def delete_sum_raster(parameter_safe, yesterday):
     :param yesterday: previous daily ID (::type: integer)
     :return:
     """
-    for i in [("PET"), ("AET"), ("IDW"), ("R"), ("S")]:
+    for i in [("PET"), ("AET"), ("IDW"), ("R"), ("S"), ("Rsoil"), ("Roverflow")]:
         arcpy.Delete_management("{}_sum_rp{}_c{}_{}_sumday.tif".format(i, parameter_safe[0], parameter_safe[1], yesterday))
 
 def write_to_table(resultspace, tablename, result, date):
@@ -291,6 +328,17 @@ if check_s == 'false':
     check_s = False
 else:
     check_s = True
+check_rs = arcpy.GetParameterAsText(25)  # datatype: boolean #  default: true
+if check_rs == 'false':
+    check_rs = False
+else:
+    check_rs = True
+check_ro = arcpy.GetParameterAsText(26)  # datatype: boolean #  default: true
+if check_ro == 'false':
+    check_ro = False
+else:
+    check_ro = True
+
 
 ########################################################################################################################
 #  set main settings and creating the working and scratch directory
@@ -404,6 +452,8 @@ for z in range(len(rp_factor)):
                 precipitation = get_precipitation(data, id_day, idw_exponent, cellsize, parameter_day)
                 runoff = get_runoff(water, lambda_parameter, wp, precipitation, s_pre, fc, pet, id_day, parameter_day)
                 runoff_m3 = get_q_m3(runoff, cellsize)  # floating point number
+                roverflow = get_roverflow(water, precipitation, s_pre, fc, id_day, parameter_day)
+                rsoil = get_rsoil(water, lambda_parameter, wp, s_pre, id_day, parameter_day)
                 s = get_soilwater(water, s_pre, precipitation, aet, runoff, id_day, parameter_day)
 
                 s_pre = s  # memory for soilwater from the previous day
@@ -418,6 +468,8 @@ for z in range(len(rp_factor)):
                             sum_precipitation = precipitation
                             sum_runoff = runoff
                             sum_s = s
+                            sum_roverflow = roverflow
+                            sum_rsoil = rsoil
                         elif sum_end == id_day:
                             sum_s = sum_s / ndays  # storage as mean value
                             sum_aet = sum_aet + aet
@@ -430,6 +482,10 @@ for z in range(len(rp_factor)):
                             sum_runoff.save("R_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start, sum_end))
                             sum_s = sum_s + s
                             sum_s.save("S_mean_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start, sum_end))
+                            sum_roverflow = sum_roverflow + roverflow
+                            sum_roverflow.save("Roverflow_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start, sum_end))
+                            sum_rsoil = sum_rsoil + rsoil
+                            sum_rsoil.save("Rsoil_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start, sum_end))
                             arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Aufsummierte Raster geschrieben.")
                         else:
                             ndays = ndays + 1
@@ -443,12 +499,16 @@ for z in range(len(rp_factor)):
                             sum_runoff.save("R_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
                             sum_s = sum_s + s
                             sum_s.save("S_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                            sum_roverflow = sum_roverflow + roverflow
+                            sum_roverflow.save("Roverflow_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                            sum_rsoil = sum_rsoil + rsoil
+                            sum_rsoil.save("Rsoil_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
                             if ndays > 2:
                                 delete_sum_raster(parameter_day, id_yesterday)
 
                 # deletes the calculated rasters above if selected
                 if not id_yesterday == start:
-                    delete_raster(check_pet, check_aet, check_p, check_r, check_s, parameter_day, id_yesterday)
+                    delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day, id_yesterday)
                 id_yesterday = id_day  # memory for the id form the previous day; necessary to delete the rasterdatasets
 
                 arcpy.AddMessage(time.strftime("%H:%M:%S: ") +
@@ -457,12 +517,12 @@ for z in range(len(rp_factor)):
         # convert resulting table to .csv
         arcpy.TableToTable_conversion(result_path, workspace, outname1+outname2+".csv")
         # deleting the rasters of the first day of the current variable combination
-        delete_raster(check_pet, check_aet, check_p, check_r, check_s, parameter_day, start)
+        delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day, start)
         if check_raster_sum == True:
             delete_sum_raster(parameter_day, sum_start)
         # deleting the rasters of the last day of the previous variable combination
         if not parameter_yesterday == parameter_day:
-            delete_raster(check_pet, check_aet, check_p, check_r, check_s, parameter_yesterday, end)
+            delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_yesterday, end)
             if check_raster_sum == True:
                 delete_sum_raster(parameter_yesterday, sum_end-1)
         parameter_yesterday = parameter_day  # memory for the value of the last combination of variables
@@ -471,7 +531,7 @@ for z in range(len(rp_factor)):
     
 
 # deleting the rasters of the last day of the last variable combination
-delete_raster(check_pet, check_aet, check_p, check_r, check_s, parameter_day, end)
+delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day, end)
 if check_raster_sum == True:
     delete_sum_raster(parameter_day, sum_end-1)
 arcpy.Delete_management(result_path)
