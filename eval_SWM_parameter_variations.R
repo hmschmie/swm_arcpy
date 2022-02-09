@@ -85,11 +85,11 @@ outmatm[,1] <- c("NSE","KGE","KGEr","KGEb","KGEg")
 
 #calculate and write efficiency metrics
 for (m in 1:length(cnamelist)) {
-   outmatm[1,m+1] <- NSE(outmat[,2],outmat[,m+2])
-   outmatm[2,m+1] <- KGE(outmat[,2],outmat[,m+2], method="2012", out.type="full")$KGE.value
-   outmatm[3,m+1] <- KGE(outmat[,2],outmat[,m+2], method="2012", out.type="full")$KGE.elements[1]
-   outmatm[4,m+1] <- KGE(outmat[,2],outmat[,m+2], method="2012", out.type="full")$KGE.elements[2]
-   outmatm[5,m+1] <- KGE(outmat[,2],outmat[,m+2], method="2012", out.type="full")$KGE.elements[3]
+   outmatm[1,m+1] <- NSE(as.numeric(outmat[,m+2]),as.numeric(outmat[,2]))
+   outmatm[2,m+1] <- KGE(as.numeric(outmat[,m+2]),as.numeric(outmat[,2]), method="2012", out.type="full")$KGE.value
+   outmatm[3,m+1] <- KGE(as.numeric(outmat[,m+2]),as.numeric(outmat[,2]), method="2012", out.type="full")$KGE.elements[1]
+   outmatm[4,m+1] <- KGE(as.numeric(outmat[,m+2]),as.numeric(outmat[,2]), method="2012", out.type="full")$KGE.elements[2]
+   outmatm[5,m+1] <- KGE(as.numeric(outmat[,m+2]),as.numeric(outmat[,2]), method="2012", out.type="full")$KGE.elements[3]
 }
 
 #combine and add the column names
