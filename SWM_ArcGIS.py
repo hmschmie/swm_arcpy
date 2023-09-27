@@ -1,7 +1,7 @@
 # -*- coding: cp1252 -*-
 
-"""Soil Water Model in Python für ArcGIS
-Course "GIS für hydrologische Fragestellungen" of the Faculty 11 of the Institute of Physical Geography at the Johann
+"""Soil Water Model in Python f?r ArcGIS
+Course "GIS f?r hydrologische Fragestellungen" of the Faculty 11 of the Institute of Physical Geography at the Johann
 Wolfgang Goethe University of Frankfurt.
 
 This simple Soil Water Model calculates the soilwater content for each rastercell of a basin. The output of the model
@@ -14,7 +14,7 @@ TempFeuchte - table of climate data. The attribute table has to have the field n
 FK_von_L - raster (field capacity in the effective root zone, in mm)
 L_in_metern - raster (effective root zone, in m)
 WP_von_L - raster (wilting point, in mm)
-Gewaesser - raster (mask of water areas with water areas = 1 and non water areas = 0)
+Gewaessernetz_Raster - raster (mask of water areas with water areas = 1 and non water areas = 0)
 N_Zeitreihen - table of precipitation data for each day and station. The attribute table has to have the field names as
             followed: "Stationsnummer", "Tagessumme_mm" and "TagesID".
 N_Messstationen- vector (points); Stations for precipitation measuring. The attribute table has to have the field name
@@ -22,16 +22,18 @@ N_Messstationen- vector (points); Stations for precipitation measuring. The attr
 Haude_[1-12] - one file per month, Haude parameter
 """
 """History
-Version 2.4 (Hannes Müller Schmied) 01/2022
+Version 2.5 (Hannes MÃ¼ller Schmied) 09/2023
+- adjusted to the updated data source and renamed input
+Version 2.4 (Hannes M?ller Schmied) 01/2022
 - added separate output of soilrunoff and overflow (e.g. to determine the dominant component)
-Version 2.3 (Hannes Müller Schmied) 01/2022
+Version 2.3 (Hannes M?ller Schmied) 01/2022
 - final output is now in m3 s-1
 - new option to store cumulated raster files (e.g. for calculating annual runoff coefficients)
-Version 2.2 (Hannes Müller Schmied) 03/2021
+Version 2.2 (Hannes M?ller Schmied) 03/2021
 - runoff for water bodies is not 0 but precipitation in the case P<=PET
 - negative soil storage is avoided in any case (set to 0 if negative)
 - improvements in text outputs
-Version 2.1 (Hannes Müller Schmied) 02/2021
+Version 2.1 (Hannes M?ller Schmied) 02/2021
 - time series output not written in geodatabase anymore but as csv in results folder
 - correct writing of message in case RP < max(WP/FK) and thus this combination is skipped
 - IDW exponent now as float data type
@@ -40,9 +42,9 @@ Version 2.1 (Hannes Müller Schmied) 02/2021
 
 __author__ = "Florian Herz"
 __copyright__ = "Copyright 2019, FH"
-__credits__ = ["Florian Herz", "Dr. Hannes Müller Schmied", "Dr. Irene Marzolff"]
-__version__ = "2.4"
-__maintainer__ = "Hannes Müller Schmied"
+__credits__ = ["Florian Herz", "Dr. Hannes MÃ¼ller Schmied", "Dr. Irene Marzolff"]
+__version__ = "2.5"
+__maintainer__ = "Hannes MÃ¼ller Schmied"
 __email__ = "hannes.mueller.schmied@em.uni-frankfurt.de"
 __status__ = "Production"
 
@@ -344,7 +346,7 @@ else:
 #  set main settings and creating the working and scratch directory
 ########################################################################################################################
 
-arcpy.env.overwriteOutput = True  # it´s possible to overwrite the results
+arcpy.env.overwriteOutput = True  # it?s possible to overwrite the results
 arcpy.env.extent = s_init  # set the working extent
 if arcpy.Exists(r'{}\{}'.format(folder, name)):  # if the working directory exists, it will be overwritten
     arcpy.Delete_management(r'{}\{}'.format(folder, name))
@@ -380,7 +382,7 @@ fc = ExtractByMask(Raster(r'{}\FK_von_L'.format(data)), basin)  # raster
 wp = ExtractByMask(Raster(r'{}\WP_von_L'.format(data)), basin)  # raster
 wpfc_qarray = rasterquotient_array(wp, fc)  # calculates an array of the quotient of two rasters #  array
 rp_control = wpfc_qarray.max()  # extract the biggest vaule of the quotient of wp:fc to compare with the rp-factor
-water = ExtractByMask(Raster(r'{}\Gewaesser'.format(data)), basin)  # raster
+water = ExtractByMask(Raster(r'{}\Gewaessermaske'.format(data)), basin)  # raster
 s_pre = s_init
 p_data = r'{}\N_Zeitreihen'.format(data)  # table
 cellsize = s_init.meanCellHeight
@@ -410,9 +412,9 @@ arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Anzahl c-Parameter={}".format(le
 for z in range(len(rp_factor)):
     arcpy.AddMessage("z={}".format(z))
     arcpy.AddMessage("maximalwert von WP/FK={}".format(rp_control))
-    arcpy.AddMessage("gewählter RP-Parameter={}".format(rp_factor[z]))
+    arcpy.AddMessage("gew?hlter RP-Parameter={}".format(rp_factor[z]))
     if rp_control >= rp_factor[z]:  # the AET is negative, if the rp-factor is smaller than the quotient of wp:fc
-        arcpy.AddMessage("RP-Parameter ist kleiner als der Maximalwert von WP/FK. RP-Parameter = {} wird übersprungen.".format(rp_factor[z]))
+        arcpy.AddMessage("RP-Parameter ist kleiner als der Maximalwert von WP/FK. RP-Parameter = {} wird ?bersprungen.".format(rp_factor[z]))
         continue  # skips all rp-factors smaller than the quotient of wp:fc
     rp = fc * rp_factor[z]
     rpwp_dif = rp - wp
@@ -442,7 +444,7 @@ for z in range(len(rp_factor)):
                 month = int(row[2]) #MM
                 day = int(row[3]) #DD
                 humid = float(row[4]) #in %
-                temp = float(row[5]) #in °C
+                temp = float(row[5]) #in ?C
                 # calculating and saving a raster dataset for each parameter
                 pet = get_pet(haude_dic[month], temp, humid, id_day, parameter_day)
                 if id_day == start:
