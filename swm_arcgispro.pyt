@@ -27,180 +27,244 @@ class Tool(object):
         self.description = "Dieses einfache Bodenwasser-Modell berechnet für jede Rasterzelle eines Einzugsgebietes die Boden-Wasser-Bilanz. Ausgabe des Modells ist eine Tabelle mit täglichen Abflussvolumen in m3 s-1 für das Einzugsgebiet, sowie auf Wunsch die berechneten Rasterdatensätze (auch über einen Wunschzeitraum aufsummiert) verschiedener Modellparameter."
         self.canRunInBackground = False
         # Define default values
-        self.workspace_default = r'C:/2023_HydroGIS/HYDROGIS_FUER_HANNES/Vogelsberg_GIS/Vogelsberg_GIS.gdb'
-        self.basin_default = r'C:/2023_HydroGIS/HYDROGIS_FUER_HANNES/Vogelsberg_GIS/Vogelsberg_GIS.gdb/Hydrologie/EZG_Eichelsachsen_Vektor'
-        self.basinID_default = "Id"
-        self.s_init_default = r'C:/2023_HydroGIS/HYDROGIS_FUER_HANNES/Vogelsberg_GIS/Vogelsberg_GIS.gdb/FK_von_L'
-        self.start_default = 20210101
-        self.end_default = 20211231
-        self.rp_factor_default = 0.85
-        self.rp_factor_max_default = 0.85
-        self.rp_factor_step_default = 0.05
-        self.c_min_default = 150
-        self.c_max_default = 150
-        self.c_step_default = 50
-        self.idw_exponent_default = 1.0
-        self.folder_default = r'C:\2023_HydroGIS\HYDROGIS_FUER_HANNES\swmouttest'
-        self.name_default = "Ergebnis"
+        # self.workspace_default = r'C:/2023_HydroGIS/HYDROGIS_FUER_HANNES/Vogelsberg_GIS/Vogelsberg_GIS.gdb'
+        # self.basin_default = r'C:/2023_HydroGIS/HYDROGIS_FUER_HANNES/Vogelsberg_GIS/Vogelsberg_GIS.gdb/Hydrologie/EZG_Eichelsachsen_Vektor'
+        # self.s_init_default = r'C:/2023_HydroGIS/HYDROGIS_FUER_HANNES/Vogelsberg_GIS/Vogelsberg_GIS.gdb/FK_von_L'
+        # self.start_default = 20210526
+        # self.end_default = 20210526
+        # self.rp_factor_default = 0.85
+        # self.rp_factor_max_default = 0.85
+        # self.rp_factor_step_default = 0.05
+        # self.c_min_default = 150
+        # self.c_max_default = 150
+        # self.c_step_default = 50
+        # self.idw_exponent_default = 1.0
+        # self.folder_default = r'C:\2023_HydroGIS\HYDROGIS_FUER_HANNES\swmouttest'
+        # self.name_default = "Ergebnis"
 
     def getParameterInfo(self):
         """Define parameter definitions"""
         workspace_param = arcpy.Parameter(
             displayName="Geodatenbank der Basisdaten",
-            name="workspace",
+            name="workspace_name",
             datatype="DEWorkspace",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         basin_param = arcpy.Parameter(
             displayName="Einzugsgebiet",
-            name="basin",
+            name="basin_name",
             datatype="DEFeatureClass",
-            parameterType="Optional",
-            direction="Input"
-        )
-        basinID_param = arcpy.Parameter(
-            displayName="Attributefeldname zur Identifikation des EZG",
-            name="basinID",
-            datatype="Field",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         s_init_param = arcpy.Parameter(
             displayName="Initialer Bodenwasserspeicher",
-            name="s_init",
+            name="s_init_name",
             datatype="DERasterDataset",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         start_param = arcpy.Parameter(
             displayName="Startdatum (JJJJMMTT)",
-            name="start",
+            name="start_name",
             datatype="Long",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         end_param = arcpy.Parameter(
             displayName="Enddatum (JJJJMMTT)",
-            name="end",
+            name="end_name",
             datatype="Long",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         rp_factor_param = arcpy.Parameter(
             displayName="Reduktionsfaktor",
-            name="rp_factor_min",
+            name="rp_factor_min_name",
             datatype="Double",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         c_param = arcpy.Parameter(
-            displayName="c Parameter (Default Value: 150)",
-            name="c_min",
+            displayName="c Parameter",
+            name="c_min_name",
             datatype="GPLong",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         c_max_param = arcpy.Parameter(
             displayName="c Parameter (Max)",
-            name="c_max",
+            name="c_max_name",
             datatype="GPLong",
             parameterType="Optional",
             direction="Input"
         )
         c_step_param = arcpy.Parameter(
             displayName="c Parameter (Schrittweite)",
-            name="c_step",
+            name="c_step_name",
             datatype="GPLong",
             parameterType="Optional",
             direction="Input"
         )
         idw_exponent_param = arcpy.Parameter(
             displayName="Exponent der IDW-Methode zur Niederschlagsinterpolation",
-            name="idw_exponent",
+            name="idw_exponent_name",
             datatype="GPDouble",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         folder_param = arcpy.Parameter(
             displayName="Speicherpfad des Ausgabeordners",
-            name="workspace",
+            name="folder_name",
             datatype="DEWorkspace",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         name_param = arcpy.Parameter(
             displayName="Name des Ausgabeordners",
-            name="name",
+            name="name_name",
             datatype="GPString",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input"
         )
         rp_factor_max_param = arcpy.Parameter(
             displayName="Reduktionsfaktor (Max)",
-            name="rp_factor_max",
+            name="rp_factor_max_name",
             datatype="Double",
             parameterType="Optional",
             direction="Input"
         )
         rp_factor_step_param = arcpy.Parameter(
             displayName="Reduktionsfaktor (Schrittweite)",
-            name="rp_factor_step",
+            name="rp_factor_step_name",
             datatype="Double",
             parameterType="Optional",
             direction="Input"
         )
+        raster_sum_param = arcpy.Parameter(
+            displayName="Aufsummieren der Rasterdateien",
+            name="check_raster_sum_name",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input"
+        )
+        sum_start_param = arcpy.Parameter(
+            displayName="Startdatum Aufsummieren (JJJJMMTT)",
+            name="sum_start_name",
+            datatype="Long",
+            parameterType="Optional",
+            direction="Input"
+        )
+        sum_end_param = arcpy.Parameter(
+            displayName="Enddatum Aufsummieren (JJJJMMTT)",
+            name="sum_end_name",
+            datatype="Long",
+            parameterType="Optional",
+            direction="Input"
+        )
+        check_pet_param = arcpy.Parameter(
+            displayName="PET",
+            name="check_pet_name",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input"
+        )
+        check_aet_param = arcpy.Parameter(
+            displayName="AET",
+            name="check_aet_name",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input"
+        )
+        check_p_param = arcpy.Parameter(
+            displayName="Niederschlag",
+            name="check_p_name",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input"
+        )
+        check_r_param = arcpy.Parameter(
+            displayName="Gesamtabfluss",
+            name="check_r_name",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input"
+        )
+        check_ro_param = arcpy.Parameter(
+            displayName="Überlauf-Abfluss",
+            name="check_ro_name",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input"
+        )
+        check_rs_param = arcpy.Parameter(
+            displayName="Glugla-Abfluss",
+            name="check_rs_name",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input"
+        )
+        check_s_param = arcpy.Parameter(
+            displayName="Bodenwasserspeicher",
+            name="check_s_name",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input"
+        )
 
-        #workspace_param.filter.list = ["File Geodatabase"]
-        #workspace_param.workspaceType = "All"
-        #workspace_param.description = "Select the workspace where the tool will operate."
-        #default_workspace = r'C:\2023_HydroGIS\HYDROGIS_FUER_HANNES\Vogelsberg_GISVogelsberg_GIS.gdb'
-        # Check if the default GDB path exists
-        #if os.path.exists(default_workspace):
-        #    workspace_param.defaultValue = default_workspace
-        #else:
-        #    arcpy.AddWarning(f"Default GDB path does not exist: {default_workspace}")
+        #define standard values
+        workspace_param.value = r'C:/HydroGIS/Vogelsberg_GIS/Vogelsberg_GIS.gdb'
+        basin_param.value = workspace_param.valueAsText + "/Hydrologie/EZG_Eichelsachsen_Vektor"
+        s_init_param.value = workspace_param.valueAsText + "/FK"
+        start_param.value = 20210526
+        end_param.value = 20210526
+        rp_factor_param.value = 0.85
+        rp_factor_max_param.value = 0.85
+        rp_factor_step_param.value = 0.05
+        c_param.value = 150
+        c_max_param.value = 150
+        c_step_param.value = 50
+        idw_exponent_param.value = 1.0
+        folder_param.value = r'C:\HydroGIS\swmout'
+        name_param.value = "SWM_Eichelsachsen_Ergebnisdaten_2021"
+        raster_sum_param.value = False
+        sum_start_param.value = 20210101
+        sum_end_param.value = 20211231
+        check_pet_param.value = False
+        check_aet_param.value = False
+        check_p_param.value = False
+        check_r_param.value = False
+        check_ro_param.value = False
+        check_rs_param.value = False
+        check_s_param.value = False
 
 
-        #basin_param.filter.list = ["Feature Class"]
-        #basin_param.description = "Einzugsgebiet"
-        #basin_param.defaultValue = "C:/2023_HydroGIS/HYDROGIS_FUER_HANNES/Vogelsberg_GIS/Vogelsberg_GIS.gdb/Hydrologie/EZG_Eichelsachsen_Vektor"
-        #basinID_param.parameterDependencies = [basin_param.name]
-        ##basinID_param.schema.clone = True
-        # basinID_param.description = "Attributefeldname zur Identifikation des EZG"
-        #basinID_param.defaultValue = "Id"
-        ##s_init_param.filter.list = ["RasterDataset"]
-        #s_init_param.description = "Initialer Bodenwasserspeicher"
-        #s_init_param.defaultValue = "C:/2023_HydroGIS/HYDROGIS_FUER_HANNES/Vogelsberg_GIS/Vogelsberg_GIS.gdb/FK_von_L"
-        #start_param.defaultValue = "20210101"
-        #end_param.defaultValue = "20210102"
-        #rp_factor_param.defaultValue = "0.85"
-        workspace_param.default = self.workspace_default
-        basin_param.default = self.basin_default
-        basinID_param.default = self.basinID_default
-        s_init_param.default = self.s_init_default
-        start_param.default = self.start_default
-        end_param.default = self.end_default
-        rp_factor_param.default = self.rp_factor_default
-        rp_factor_max_param.default = self.rp_factor_max_default
-        rp_factor_step_param.default = self.rp_factor_step_default
-        c_param.default = self.c_min_default
-        c_max_param.default = self.c_max_default
-        c_step_param.default = self.c_step_default
-        idw_exponent_param.default = self.idw_exponent_default
-        folder_param.default = self.folder_default
-        name_param.default = self.name_default
+        #assign the default values
+        # workspace_param.default = self.workspace_default
+        # basin_param.default = self.basin_default
+        # s_init_param.default = self.s_init_default
+        # start_param.default = self.start_default
+        # end_param.default = self.end_default
+        # rp_factor_param.default = self.rp_factor_default
+        # rp_factor_max_param.default = self.rp_factor_max_default
+        # rp_factor_step_param.default = self.rp_factor_step_default
+        # c_param.default = self.c_min_default
+        # c_max_param.default = self.c_max_default
+        # c_step_param.default = self.c_step_default
+        # idw_exponent_param.default = self.idw_exponent_default
+        # folder_param.default = self.folder_default
+        # name_param.default = self.name_default
 
-        return [workspace_param, basin_param, basinID_param, s_init_param, start_param, end_param, rp_factor_param,
+        #do not modify the order as this is numbered and numbers are hard coded in the following.
+        parameters = [workspace_param, basin_param, s_init_param, start_param, end_param, rp_factor_param,
                 c_param, idw_exponent_param, folder_param, name_param, rp_factor_max_param, rp_factor_step_param,
-                c_max_param, c_step_param]
+                c_max_param, c_step_param, raster_sum_param, sum_start_param, sum_end_param, check_pet_param,
+                      check_aet_param, check_p_param, check_r_param, check_ro_param, check_rs_param, check_s_param]
+        return parameters
 
     def validate(self, parameters, messages):
-        s_init_param = parameters[3].valueAsText
-        desc = arcpy.Describe(input_raster)
-        if not desc.dataType == "RasterDataset":
-            messages.addErrorMessage("Please select a valid raster dataset.")
-            raise arcpy.ExecuteError
+        return
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -218,6 +282,10 @@ class Tool(object):
         return
 
     def execute(self, parameters, messages):
+
+        #workspace_name = parameters[0].valueAsText
+        #basin_name = parameters[1].valueAsText
+
         """The source code of the tool."""
         arcpy.CheckOutExtension("Spatial")
         arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Systemmodule geladen.")
@@ -437,41 +505,56 @@ class Tool(object):
             """
             quotient_array = arcpy.RasterToNumPyArray(dividend / divisor, nodata_to_value=0)
             return quotient_array
-        # Access the workspace parameter value
-        #data = parameters[0].valueAsText
-        #basin = parameters[1].valueAsText
-        #basinID = parameters[2].valueAsText
-        #s_init = arcpy.sa.ExtractByMask(parameters[3].valueAsText, basin)
-        #id_yesterday = start = int(parameters[4].valueAsText)
-        #end = int(parameters[5].valueAsText)
-        #rp_factor_min = float(parameters[6].valueAsText)
-        data = parameters[0].valueAsText if parameters[0].valueAsText else self.workspace_default
-        basin = parameters[1].valueAsText if parameters[1].valueAsText else self.basin_default
-        basinID = parameters[2].valueAsText if parameters[2].valueAsText else self.basinID_default
-        s_init = arcpy.sa.ExtractByMask(parameters[3].valueAsText, basin) if parameters[3].valueAsText else arcpy.sa.ExtractByMask(self.s_init_default, basin)
-        id_yesterday = start = parameters[4].valueAsText if parameters[4].valueAsText else self.start_default
-        end = parameters[5].valueAsText if parameters[5].valueAsText else self.end_default
-        rp_factor_min = float(parameters[6].valueAsText) if parameters[6].valueAsText else self.rp_factor_default
-        c_min = int(parameters[7].valueAsText) if parameters[7].valueAsText else self.c_min_default
-        idw_exponent = float(parameters[8].valueAsText) if parameters[8].valueAsText else self.idw_exponent_default
-        folder = parameters[9].valueAsText if parameters[9].valueAsText else self.folder_default
-        name = parameters[10].valueAsText if parameters[10].valueAsText else self.name_default
-        rp_factor_max = float(parameters[11].valueAsText) if parameters[11].valueAsText else self.rp_factor_max_default
-        rp_factor_step = float(parameters[12].valueAsText) if parameters[12].valueAsText else self.rp_factor_step_default
-        c_max = int(parameters[13].valueAsText) if parameters[13].valueAsText else self.c_max_default
-        c_step = int(parameters[14].valueAsText) if parameters[14].valueAsText else self.c_step_default
+        # Access the parameter values, simplified without catching errors to avoid setting to default values in case something gets wrong
+        # data = parameters[0].valueAsText if parameters[0].valueAsText else arcpy.AddError("ERRORRFRRF")
+        # basin = parameters[1].valueAsText if parameters[1].valueAsText else self.basin_default
+        # s_init = arcpy.sa.ExtractByMask(parameters[2].valueAsText, basin) if parameters[2].valueAsText else arcpy.sa.ExtractByMask(self.s_init_default, basin)
+        # id_yesterday = start = parameters[3].valueAsText if parameters[3].valueAsText else self.start_default
+        # end = parameters[4].valueAsText if parameters[4].valueAsText else self.end_default
+        # rp_factor_min = float(parameters[5].valueAsText) if parameters[5].valueAsText else self.rp_factor_default
+        # c_min = int(parameters[6].valueAsText) if parameters[6].valueAsText else self.c_min_default
+        # idw_exponent = float(parameters[7].valueAsText) if parameters[7].valueAsText else self.idw_exponent_default
+        # folder = parameters[8].valueAsText if parameters[8].valueAsText else self.folder_default
+        # name = parameters[9].valueAsText if parameters[9].valueAsText else self.name_default
+        # rp_factor_max = float(parameters[10].valueAsText) if parameters[10].valueAsText else self.rp_factor_max_default
+        # rp_factor_step = float(parameters[11].valueAsText) if parameters[11].valueAsText else self.rp_factor_step_default
+        # c_max = int(parameters[12].valueAsText) if parameters[12].valueAsText else self.c_max_default
+        # c_step = int(parameters[13].valueAsText) if parameters[13].valueAsText else self.c_step_default
+        data = parameters[0].valueAsText
+        basin = parameters[1].valueAsText
+        s_init = arcpy.sa.ExtractByMask(parameters[2].valueAsText, basin)
+        id_yesterday = start = parameters[3].valueAsText
+        end = parameters[4].valueAsText
+        rp_factor_min = float(parameters[5].valueAsText)
+        c_min = int(parameters[6].valueAsText)
+        idw_exponent = float(parameters[7].valueAsText)
+        folder = parameters[8].valueAsText
+        name = parameters[9].valueAsText
+        rp_factor_max = float(parameters[10].valueAsText)
+        rp_factor_step = float(parameters[11].valueAsText)
+        c_max = int(parameters[12].valueAsText)
+        c_step = int(parameters[13].valueAsText)
+        check_raster_sum = parameters[14].value
+        sum_start = parameters[15].valueAsText
+        sum_end = parameters[16].valueAsText
+        check_pet = parameters[17].value
+        check_aet = parameters[18].value
+        check_p = parameters[19].value
+        check_r = parameters[20].value
+        check_ro = parameters[21].value
+        check_rs = parameters[22].value
+        check_s = parameters[23].value
 
-        #        arcpy.AddMessage(f"workspace: {data}")
-        #        arcpy.AddMessage(f"basin: {basin}")
-        #        arcpy.AddMessage(f"basinID: {basinID}")
-        #        arcpy.AddMessage(f"s_init: {s_init}")
-        #        arcpy.AddMessage(f"start: {start}")
-        #        arcpy.AddMessage(f"end: {end}")
-        #        arcpy.AddMessage(f"rp: {rp_factor_min}")
-        #        arcpy.AddMessage(f"c: {c_min}")
-        #        arcpy.AddMessage(f"idw: {idw_exponent}")
-        #        arcpy.AddMessage(f"folder: {folder}")
-        #        arcpy.AddMessage(f"name: {name}")
+        #arcpy.AddMessage(f"workspace: {data}")
+        #arcpy.AddMessage(f"basin: {basin}")
+        #arcpy.AddMessage(f"s_init: {s_init}")
+        #arcpy.AddMessage(f"start: {start}")
+        #arcpy.AddMessage(f"end: {end}")
+        #arcpy.AddMessage(f"rp: {rp_factor_min}")
+        #arcpy.AddMessage(f"c: {c_min}")
+        #arcpy.AddMessage(f"idw: {idw_exponent}")
+        #arcpy.AddMessage(f"folder: {folder}")
+        #arcpy.AddMessage(f"name: {name}")
 
         """ set main settings and creating the working and scratch directory """
         arcpy.env.overwriteOutput = True  # to overwrite results
@@ -479,7 +562,7 @@ class Tool(object):
         workpath = arcpy.env.workspace = os.path.join(folder, name)
         scratch = "Scratch"
         scratchpath = os.path.join(folder,scratch)
-        #arcpy.AddMessage(f"workpath: {workpath}")
+        arcpy.AddMessage(f"workpath: {workpath}")
         if not os.path.exists(workpath):  # if the working directory exists, it will be overwritten
             try:
                 os.makedirs(workpath)
@@ -509,21 +592,21 @@ class Tool(object):
 
         """link and extract the base datasets (The datasets has to be saved with the same name as below in the base directory.)"""
         # dictionary to link the month and its specific haudefactor
-        haude_dic = {1: ExtractByMask(Raster(r'{}\Haude_1'.format(data)), basin),
-                     2: ExtractByMask(Raster(r'{}\Haude_2'.format(data)), basin),
-                     3: ExtractByMask(Raster(r'{}\Haude_3'.format(data)), basin),
-                     4: ExtractByMask(Raster(r'{}\Haude_4'.format(data)), basin),
-                     5: ExtractByMask(Raster(r'{}\Haude_5'.format(data)), basin),
-                     6: ExtractByMask(Raster(r'{}\Haude_6'.format(data)), basin),
-                     7: ExtractByMask(Raster(r'{}\Haude_7'.format(data)), basin),
-                     8: ExtractByMask(Raster(r'{}\Haude_8'.format(data)), basin),
-                     9: ExtractByMask(Raster(r'{}\Haude_9'.format(data)), basin),
-                     10: ExtractByMask(Raster(r'{}\Haude_10'.format(data)), basin),
-                     11: ExtractByMask(Raster(r'{}\Haude_11'.format(data)), basin),
-                     12: ExtractByMask(Raster(r'{}\Haude_12'.format(data)), basin)}
-        climatedata = r'{}\TempFeuchte'.format(data)  # table
-        fc = ExtractByMask(Raster(r'{}\FK_von_L'.format(data)), basin)  # raster
-        wp = ExtractByMask(Raster(r'{}\WP_von_L'.format(data)), basin)  # raster
+        haude_dic = {1: ExtractByMask(Raster(r'{}\Haude_Jan'.format(data)), basin),
+                     2: ExtractByMask(Raster(r'{}\Haude_Feb'.format(data)), basin),
+                     3: ExtractByMask(Raster(r'{}\Haude_Mar'.format(data)), basin),
+                     4: ExtractByMask(Raster(r'{}\Haude_Apr'.format(data)), basin),
+                     5: ExtractByMask(Raster(r'{}\Haude_Mai'.format(data)), basin),
+                     6: ExtractByMask(Raster(r'{}\Haude_Jun'.format(data)), basin),
+                     7: ExtractByMask(Raster(r'{}\Haude_Jul'.format(data)), basin),
+                     8: ExtractByMask(Raster(r'{}\Haude_Aug'.format(data)), basin),
+                     9: ExtractByMask(Raster(r'{}\Haude_Sep'.format(data)), basin),
+                     10: ExtractByMask(Raster(r'{}\Haude_Okt'.format(data)), basin),
+                     11: ExtractByMask(Raster(r'{}\Haude_Nov'.format(data)), basin),
+                     12: ExtractByMask(Raster(r'{}\Haude_Dez'.format(data)), basin)}
+        climatedata = r'{}\TempFeuchte_'.format(data)  # table
+        fc = ExtractByMask(Raster(r'{}\FK'.format(data)), basin)  # raster
+        wp = ExtractByMask(Raster(r'{}\WP'.format(data)), basin)  # raster
         wpfc_qarray = rasterquotient_array(wp, fc)  # calculates an array of the quotient of two rasters #  array
         rp_control = wpfc_qarray.max()  # extract the biggest vaule of the quotient of wp:fc to compare with the rp-factor
         water = ExtractByMask(Raster(r'{}\Gewaessermaske'.format(data)), basin)  # raster
@@ -578,7 +661,7 @@ class Tool(object):
                 arcpy.DeleteField_management(result_path, ["OBJECTID", "FIELD1"])
 
                 # iterating through the climate data of the period
-                with arcpy.da.SearchCursor(climatedata, ['TagesID', 'Jahr', 'Monat', 'Tag', 'RelFeu', 'Temp'],
+                with arcpy.da.SearchCursor(climatedata, ['TagesID', 'Jahr', 'Monat', 'Tag', 'RelFeu', 'Temp_'],
                                            "TagesID >= {0} AND TagesID <= {1}".format(start, end)) as cursor:
                     for row in cursor:
 
@@ -603,79 +686,79 @@ class Tool(object):
 
                         s_pre = s  # memory for soilwater from the previous day
                         write_to_table(workpath, outname1, runoff_m3, str(id_day))  # writing the runoff into the result table
-                        # if check_raster_sum == True:
-                        #     if sum_start <= id_day <= sum_end:
-                        #         if sum_start == id_day:
-                        #             arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Aufsummierung der Raster beginnt.")
-                        #             ndays = 1
-                        #             sum_pet = pet
-                        #             sum_aet = aet
-                        #             sum_precipitation = precipitation
-                        #             sum_runoff = runoff
-                        #             sum_s = s
-                        #             sum_roverflow = roverflow
-                        #             sum_rsoil = rsoil
-                        #         elif sum_end == id_day:
-                        #             sum_s = sum_s / ndays  # storage as mean value
-                        #             sum_aet = sum_aet + aet
-                        #             sum_aet.save(
-                        #                 "AET_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
-                        #                                                     sum_end))
-                        #             sum_pet = sum_pet + pet
-                        #             sum_pet.save(
-                        #                 "PET_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
-                        #                                                     sum_end))
-                        #             sum_precipitation = sum_precipitation + precipitation
-                        #             sum_precipitation.save(
-                        #                 "IDW_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
-                        #                                                     sum_end))
-                        #             sum_runoff = sum_runoff + runoff
-                        #             sum_runoff.save(
-                        #                 "R_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
-                        #                                                   sum_end))
-                        #             sum_s = sum_s + s
-                        #             sum_s.save("S_mean_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
-                        #                                                           sum_end))
-                        #             sum_roverflow = sum_roverflow + roverflow
-                        #             sum_roverflow.save(
-                        #                 "Roverflow_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
-                        #                                                           sum_end))
-                        #             sum_rsoil = sum_rsoil + rsoil
-                        #             sum_rsoil.save(
-                        #                 "Rsoil_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
-                        #                                                       sum_end))
-                        #             arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Aufsummierte Raster geschrieben.")
-                        #         else:
-                        #             ndays = ndays + 1
-                        #             sum_pet = sum_pet + pet
-                        #             sum_pet.save(
-                        #                 "PET_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
-                        #             sum_aet = sum_aet + aet
-                        #             sum_aet.save(
-                        #                 "AET_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
-                        #             sum_precipitation = sum_precipitation + precipitation
-                        #             sum_precipitation.save(
-                        #                 "IDW_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
-                        #             sum_runoff = sum_runoff + runoff
-                        #             sum_runoff.save(
-                        #                 "R_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
-                        #             sum_s = sum_s + s
-                        #             sum_s.save(
-                        #                 "S_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
-                        #             sum_roverflow = sum_roverflow + roverflow
-                        #             sum_roverflow.save(
-                        #                 "Roverflow_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1],
-                        #                                                               id_day))
-                        #             sum_rsoil = sum_rsoil + rsoil
-                        #             sum_rsoil.save(
-                        #                 "Rsoil_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
-                        #             if ndays > 2:
-                        #                 delete_sum_raster(parameter_day, id_yesterday)
+                        if check_raster_sum == True:
+                            if int(sum_start) <= id_day <= int(sum_end):
+                                if int(sum_start) == id_day:
+                                    arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Aufsummierung der Raster beginnt.")
+                                    ndays = 1
+                                    sum_pet = pet
+                                    sum_aet = aet
+                                    sum_precipitation = precipitation
+                                    sum_runoff = runoff
+                                    sum_s = s
+                                    sum_roverflow = roverflow
+                                    sum_rsoil = rsoil
+                                elif int(sum_end) == id_day:
+                                    sum_s = sum_s / ndays  # storage as mean value
+                                    sum_aet = sum_aet + aet
+                                    sum_aet.save(
+                                        "AET_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
+                                                                            sum_end))
+                                    sum_pet = sum_pet + pet
+                                    sum_pet.save(
+                                        "PET_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
+                                                                            sum_end))
+                                    sum_precipitation = sum_precipitation + precipitation
+                                    sum_precipitation.save(
+                                        "IDW_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
+                                                                            sum_end))
+                                    sum_runoff = sum_runoff + runoff
+                                    sum_runoff.save(
+                                        "R_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
+                                                                          sum_end))
+                                    sum_s = sum_s + s
+                                    sum_s.save("S_mean_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
+                                                                                  sum_end))
+                                    sum_roverflow = sum_roverflow + roverflow
+                                    sum_roverflow.save(
+                                        "Roverflow_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
+                                                                                  sum_end))
+                                    sum_rsoil = sum_rsoil + rsoil
+                                    sum_rsoil.save(
+                                        "Rsoil_sum_rp{}_c{}_{}_{}.tif".format(parameter_day[0], parameter_day[1], sum_start,
+                                                                              sum_end))
+                                    arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Aufsummierte Raster geschrieben.")
+                                else:
+                                    ndays = ndays + 1
+                                    sum_pet = sum_pet + pet
+                                    sum_pet.save(
+                                        "PET_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                                    sum_aet = sum_aet + aet
+                                    sum_aet.save(
+                                        "AET_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                                    sum_precipitation = sum_precipitation + precipitation
+                                    sum_precipitation.save(
+                                        "IDW_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                                    sum_runoff = sum_runoff + runoff
+                                    sum_runoff.save(
+                                        "R_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                                    sum_s = sum_s + s
+                                    sum_s.save(
+                                        "S_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                                    sum_roverflow = sum_roverflow + roverflow
+                                    sum_roverflow.save(
+                                        "Roverflow_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1],
+                                                                                      id_day))
+                                    sum_rsoil = sum_rsoil + rsoil
+                                    sum_rsoil.save(
+                                        "Rsoil_sum_rp{}_c{}_{}_sumday.tif".format(parameter_day[0], parameter_day[1], id_day))
+                                    if ndays > 2:
+                                        delete_sum_raster(parameter_day, id_yesterday)
 
                         # deletes the calculated rasters above if selected
-                        #if not id_yesterday == start:
-                        #    delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day,
-                        #                  id_yesterday)
+                        if not id_yesterday == start:
+                            delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day,
+                                          id_yesterday)
                         id_yesterday = id_day  # memory for the id form the previous day; necessary to delete the rasterdatasets
 
                         arcpy.AddMessage(time.strftime("%H:%M:%S: ") +
@@ -684,24 +767,24 @@ class Tool(object):
                 # convert resulting table to .csv
                 arcpy.TableToTable_conversion(result_path, workpath, outname1 + outname2 + ".csv")
                 # deleting the rasters of the first day of the current variable combination
-                #delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day, start)
-                #if check_raster_sum == True:
-                #    delete_sum_raster(parameter_day, sum_start)
+                delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day, start)
+                if check_raster_sum == True:
+                    delete_sum_raster(parameter_day, sum_start)
                 # deleting the rasters of the last day of the previous variable combination
-               # if not parameter_yesterday == parameter_day:
-                #    delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_yesterday, end)
-                #    if check_raster_sum == True:
-               #         delete_sum_raster(parameter_yesterday, sum_end - 1)
+                if not parameter_yesterday == parameter_day:
+                    delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_yesterday, end)
+                    if check_raster_sum == True:
+                       delete_sum_raster(parameter_yesterday, sum_end - 1)
                 parameter_yesterday = parameter_day  # memory for the value of the last combination of variables
                 arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Fertig mit c={}".format(c[y]))
             arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Fertig mit rp={}".format(rp_factor[z]))
 
         # deleting the rasters of the last day of the last variable combination
-        #delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day, end)
-        #if check_raster_sum == True:
-        #    delete_sum_raster(parameter_day, sum_end - 1)
-        #arcpy.Delete_management(result_path)
-        #arcpy.RefreshCatalog(workpath)
+        delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day, end)
+        if check_raster_sum == True:
+            delete_sum_raster(parameter_day, int(sum_end) - 1)
+        arcpy.Delete_management(result_path)
+        #arcpy.RefreshCatalog(workpath) #does not work with ArcGIS Pro
         arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Modellierung abgeschlossen.")
 
     def postExecute(self, parameters):
