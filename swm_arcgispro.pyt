@@ -525,13 +525,13 @@ class Tool(object):
         s_init = arcpy.sa.ExtractByMask(parameters[2].valueAsText, basin)
         id_yesterday = start = parameters[3].valueAsText
         end = parameters[4].valueAsText
-        rp_factor_min = float(parameters[5].valueAsText)
+        rp_factor_min = float(parameters[5].valueAsText.replace(",","."))
         c_min = int(parameters[6].valueAsText)
-        idw_exponent = float(parameters[7].valueAsText)
+        idw_exponent = float(parameters[7].valueAsText.replace(",","."))
         folder = parameters[8].valueAsText
         name = parameters[9].valueAsText
-        rp_factor_max = float(parameters[10].valueAsText)
-        rp_factor_step = float(parameters[11].valueAsText)
+        rp_factor_max = float(parameters[10].valueAsText.replace(",","."))
+        rp_factor_step = float(parameters[11].valueAsText.replace(",","."))
         c_max = int(parameters[12].valueAsText)
         c_step = int(parameters[13].valueAsText)
         check_raster_sum = parameters[14].value
