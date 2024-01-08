@@ -80,31 +80,17 @@ class Tool(object):
             direction="Input"
         )
         rp_factor_param = arcpy.Parameter(
-            displayName="Reduktionsfaktor",
+            displayName="RP",
             name="rp_factor_min_name",
             datatype="Double",
             parameterType="Required",
             direction="Input"
         )
         c_param = arcpy.Parameter(
-            displayName="c Parameter",
+            displayName="c-Parameter",
             name="c_min_name",
             datatype="GPLong",
             parameterType="Required",
-            direction="Input"
-        )
-        c_max_param = arcpy.Parameter(
-            displayName="c Parameter (Max)",
-            name="c_max_name",
-            datatype="GPLong",
-            parameterType="Optional",
-            direction="Input"
-        )
-        c_step_param = arcpy.Parameter(
-            displayName="c Parameter (Schrittweite)",
-            name="c_step_name",
-            datatype="GPLong",
-            parameterType="Optional",
             direction="Input"
         )
         idw_exponent_param = arcpy.Parameter(
@@ -128,89 +114,117 @@ class Tool(object):
             parameterType="Required",
             direction="Input"
         )
+        c_max_param = arcpy.Parameter(
+            displayName="c-Parameter (Max)",
+            name="c_max_name",
+            datatype="GPLong",
+            parameterType="Optional",
+            direction="Input",
+            category="Variation c-Parameter"
+        )
+        c_step_param = arcpy.Parameter(
+            displayName="c-Parameter (Schrittweite)",
+            name="c_step_name",
+            datatype="GPLong",
+            parameterType="Optional",
+            direction="Input",
+            category="Variation c-Parameter"
+        )
         rp_factor_max_param = arcpy.Parameter(
-            displayName="Reduktionsfaktor (Max)",
+            displayName="RP (Max)",
             name="rp_factor_max_name",
             datatype="Double",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Variation RP"
         )
         rp_factor_step_param = arcpy.Parameter(
-            displayName="Reduktionsfaktor (Schrittweite)",
+            displayName="RP (Schrittweite)",
             name="rp_factor_step_name",
             datatype="Double",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Variation RP"
         )
         raster_sum_param = arcpy.Parameter(
             displayName="Aufsummieren der Rasterdateien",
             name="check_raster_sum_name",
             datatype="GPBoolean",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Aufsummieren der Rasterdateien"
         )
         sum_start_param = arcpy.Parameter(
             displayName="Startdatum Aufsummieren (JJJJMMTT)",
             name="sum_start_name",
             datatype="Long",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Aufsummieren der Rasterdateien"
         )
         sum_end_param = arcpy.Parameter(
             displayName="Enddatum Aufsummieren (JJJJMMTT)",
             name="sum_end_name",
             datatype="Long",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Aufsummieren der Rasterdateien"
         )
         check_pet_param = arcpy.Parameter(
             displayName="PET",
             name="check_pet_name",
             datatype="GPBoolean",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Speichern der täglichen Rasterdaten"
         )
         check_aet_param = arcpy.Parameter(
             displayName="AET",
             name="check_aet_name",
             datatype="GPBoolean",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Speichern der täglichen Rasterdaten"
         )
         check_p_param = arcpy.Parameter(
             displayName="Niederschlag",
             name="check_p_name",
             datatype="GPBoolean",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Speichern der täglichen Rasterdaten"
         )
         check_r_param = arcpy.Parameter(
             displayName="Gesamtabfluss",
             name="check_r_name",
             datatype="GPBoolean",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Speichern der täglichen Rasterdaten"
         )
         check_ro_param = arcpy.Parameter(
             displayName="Überlauf-Abfluss",
             name="check_ro_name",
             datatype="GPBoolean",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Speichern der täglichen Rasterdaten"
         )
         check_rs_param = arcpy.Parameter(
             displayName="Glugla-Abfluss",
             name="check_rs_name",
             datatype="GPBoolean",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Speichern der täglichen Rasterdaten"
         )
         check_s_param = arcpy.Parameter(
             displayName="Bodenwasserspeicher",
             name="check_s_name",
             datatype="GPBoolean",
             parameterType="Optional",
-            direction="Input"
+            direction="Input",
+            category="Speichern der täglichen Rasterdaten"
         )
 
         #define standard values
@@ -240,23 +254,7 @@ class Tool(object):
         check_s_param.value = False
 
 
-        #assign the default values
-        # workspace_param.default = self.workspace_default
-        # basin_param.default = self.basin_default
-        # s_init_param.default = self.s_init_default
-        # start_param.default = self.start_default
-        # end_param.default = self.end_default
-        # rp_factor_param.default = self.rp_factor_default
-        # rp_factor_max_param.default = self.rp_factor_max_default
-        # rp_factor_step_param.default = self.rp_factor_step_default
-        # c_param.default = self.c_min_default
-        # c_max_param.default = self.c_max_default
-        # c_step_param.default = self.c_step_default
-        # idw_exponent_param.default = self.idw_exponent_default
-        # folder_param.default = self.folder_default
-        # name_param.default = self.name_default
-
-        #do not modify the order as this is numbered and numbers are hard coded in the following.
+       #do not modify the order as this is numbered and numbers are hard coded in the following.
         parameters = [workspace_param, basin_param, s_init_param, start_param, end_param, rp_factor_param,
                 c_param, idw_exponent_param, folder_param, name_param, rp_factor_max_param, rp_factor_step_param,
                 c_max_param, c_step_param, raster_sum_param, sum_start_param, sum_end_param, check_pet_param,
@@ -345,15 +343,20 @@ class Tool(object):
             :param parameter_safe: values of the variable combination (:type: tuple)
             :return: precipitation interpolation (:type: raster)
             """
-            arcpy.MakeQueryTable_management(r'{}\N_Messstationen;'.format(dataspace) +
-                                            r'{}\N_Zeitreihen'.format(dataspace), "p_temp",
+            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag start.")
+            #arcpy.env.workspace = "in_memory"
+            arcpy.management.MakeQueryTable(r'{}\N_Messstationen;'.format(dataspace) + r'{}\N_Zeitreihen'.format(dataspace), "p_temp",
                                             "USE_KEY_FIELDS", "N_Messstationen.Stationsnummer;N_Zeitreihen.TagesID",
                                             "N_Messstationen.Stationsnummer;N_Messstationen.Stationsname; N_Messstationen.Shape\
                                             ;N_Zeitreihen.Tagessumme_mm;N_Zeitreihen.TagesID", "N_Zeitreihen.Stationsnummer =\
                                             N_Messstationen.Stationsnummer AND N_Zeitreihen.TagesID = {}".format(date))
+            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag query end.")
             idw = Idw("p_temp", "N_Zeitreihen.Tagessumme_mm", rastercellsize, idw_pow, RadiusFixed(20000.00000, 5), "")
+            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag idw end.")
             idw.save("IDW_rp{}_c{}_{}.tif".format(parameter_safe[0], parameter_safe[1], date))
-            arcpy.Delete_management("p_temp")
+            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag save end.")
+            #arcpy.management.Delete("p_temp")
+            #arcpy.Delete_management("in_memory")
             arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag interpoliert.")
 
             return idw
@@ -612,6 +615,7 @@ class Tool(object):
         water = ExtractByMask(Raster(r'{}\Gewaessermaske'.format(data)), basin)  # raster
         s_pre = s_init
         p_data = r'{}\N_Zeitreihen'.format(data)  # table
+        #p_data = r'{}\N_Messstationen;'.format(data) + r'{}\N_Zeitreihen'.format(data)
         cellsize = s_init.meanCellHeight
         arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "cellsize={}".format(cellsize))
         l_m = ExtractByMask(Raster(r'{}\L_in_metern'.format(data)), basin)  # raster
