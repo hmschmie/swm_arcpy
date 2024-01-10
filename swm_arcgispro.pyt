@@ -769,8 +769,8 @@ class Tool(object):
         delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day, end)
         if check_raster_sum == True:
             delete_sum_raster(parameter_day, int(sum_end) - 1)
-        #arcpy.Delete_management(result_path)
-        shutil.rmtree(result_path)
+        arcpy.Delete_management(result_path)
+        #shutil.rmtree(result_path)
         #arcpy.RefreshCatalog(workpath) #does not work with ArcGIS Pro
         arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Modellierung abgeschlossen.")
 
