@@ -4,7 +4,10 @@
 import arcpy
 from arcpy.sa import *
 import time
+import os
+import shutil
 
+arcpy.env.parallelProcessingFactor = "100%"
 
 class Toolbox(object):
     def __init__(self):
@@ -241,7 +244,7 @@ class Tool(object):
         c_step_param.value = 50
         idw_exponent_param.value = 1.0
         folder_param.value = r'C:\HydroGIS\swmout'
-        name_param.value = "SWM_Eichelsachsen_Ergebnisdaten_2021"
+        name_param.value = "SWM_Eichelsachsen_Ergebnisdaten_20210526"
         raster_sum_param.value = False
         sum_start_param.value = 20210101
         sum_end_param.value = 20211231
@@ -343,21 +346,21 @@ class Tool(object):
             :param parameter_safe: values of the variable combination (:type: tuple)
             :return: precipitation interpolation (:type: raster)
             """
-            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag start.")
-            #arcpy.env.workspace = "in_memory"
-            arcpy.management.MakeQueryTable(r'{}\N_Messstationen;'.format(dataspace) + r'{}\N_Zeitreihen'.format(dataspace), "p_temp",
-                                            "USE_KEY_FIELDS", "N_Messstationen.Stationsnummer;N_Zeitreihen.TagesID",
-                                            "N_Messstationen.Stationsnummer;N_Messstationen.Stationsname; N_Messstationen.Shape\
+            #arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag start.")
+            arcpy.management.MakeQueryTable(
+                r'{}\N_Messstationen;'.format(dataspace) + r'{}\N_Zeitreihen'.format(dataspace), "p_temp",
+                "USE_KEY_FIELDS", "N_Messstationen.Stationsnummer;N_Zeitreihen.TagesID",
+                "N_Messstationen.Stationsnummer;N_Messstationen.Stationsname; N_Messstationen.Shape\
                                             ;N_Zeitreihen.Tagessumme_mm;N_Zeitreihen.TagesID", "N_Zeitreihen.Stationsnummer =\
-                                            N_Messstationen.Stationsnummer AND N_Zeitreihen.TagesID = {}".format(date))
-            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag query end.")
+                                                   N_Messstationen.Stationsnummer AND N_Zeitreihen.TagesID = {}".format(
+                    date))
+            #arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag query end.")
             idw = Idw("p_temp", "N_Zeitreihen.Tagessumme_mm", rastercellsize, idw_pow, RadiusFixed(20000.00000, 5), "")
-            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag idw end.")
+            #arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag idw end.")
             idw.save("IDW_rp{}_c{}_{}.tif".format(parameter_safe[0], parameter_safe[1], date))
-            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag save end.")
-            #arcpy.management.Delete("p_temp")
-            #arcpy.Delete_management("in_memory")
-            arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag interpoliert.")
+            #arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag save end.")
+            arcpy.Delete_management("p_temp")
+           #arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Niederschlag interpoliert.")
 
             return idw
 
@@ -508,21 +511,9 @@ class Tool(object):
             """
             quotient_array = arcpy.RasterToNumPyArray(dividend / divisor, nodata_to_value=0)
             return quotient_array
+
+
         # Access the parameter values, simplified without catching errors to avoid setting to default values in case something gets wrong
-        # data = parameters[0].valueAsText if parameters[0].valueAsText else arcpy.AddError("ERRORRFRRF")
-        # basin = parameters[1].valueAsText if parameters[1].valueAsText else self.basin_default
-        # s_init = arcpy.sa.ExtractByMask(parameters[2].valueAsText, basin) if parameters[2].valueAsText else arcpy.sa.ExtractByMask(self.s_init_default, basin)
-        # id_yesterday = start = parameters[3].valueAsText if parameters[3].valueAsText else self.start_default
-        # end = parameters[4].valueAsText if parameters[4].valueAsText else self.end_default
-        # rp_factor_min = float(parameters[5].valueAsText) if parameters[5].valueAsText else self.rp_factor_default
-        # c_min = int(parameters[6].valueAsText) if parameters[6].valueAsText else self.c_min_default
-        # idw_exponent = float(parameters[7].valueAsText) if parameters[7].valueAsText else self.idw_exponent_default
-        # folder = parameters[8].valueAsText if parameters[8].valueAsText else self.folder_default
-        # name = parameters[9].valueAsText if parameters[9].valueAsText else self.name_default
-        # rp_factor_max = float(parameters[10].valueAsText) if parameters[10].valueAsText else self.rp_factor_max_default
-        # rp_factor_step = float(parameters[11].valueAsText) if parameters[11].valueAsText else self.rp_factor_step_default
-        # c_max = int(parameters[12].valueAsText) if parameters[12].valueAsText else self.c_max_default
-        # c_step = int(parameters[13].valueAsText) if parameters[13].valueAsText else self.c_step_default
         data = parameters[0].valueAsText
         basin = parameters[1].valueAsText
         s_init = arcpy.sa.ExtractByMask(parameters[2].valueAsText, basin)
@@ -548,23 +539,13 @@ class Tool(object):
         check_rs = parameters[22].value
         check_s = parameters[23].value
 
-        #arcpy.AddMessage(f"workspace: {data}")
-        #arcpy.AddMessage(f"basin: {basin}")
-        #arcpy.AddMessage(f"s_init: {s_init}")
-        #arcpy.AddMessage(f"start: {start}")
-        #arcpy.AddMessage(f"end: {end}")
-        #arcpy.AddMessage(f"rp: {rp_factor_min}")
-        #arcpy.AddMessage(f"c: {c_min}")
-        #arcpy.AddMessage(f"idw: {idw_exponent}")
-        #arcpy.AddMessage(f"folder: {folder}")
-        #arcpy.AddMessage(f"name: {name}")
-
         """ set main settings and creating the working and scratch directory """
         arcpy.env.overwriteOutput = True  # to overwrite results
         arcpy.env.extent = s_init  # set the working extent
         workpath = arcpy.env.workspace = os.path.join(folder, name)
         scratch = "Scratch"
         scratchpath = os.path.join(folder,scratch)
+
         arcpy.AddMessage(f"workpath: {workpath}")
         if not os.path.exists(workpath):  # if the working directory exists, it will be overwritten
             try:
@@ -574,7 +555,7 @@ class Tool(object):
                 arcpyAddError(f"Ausgabeordner nicht erstellt: {str(e)}")
         else:
             arcpy.AddMessage("Ausgabeordner existiert bereits und wird neu aufgesetzt.")
-            arcpy.Delete_management(workpath)
+            shutil.rmtree(workpath)
             os.makedirs(workpath)
 
         if not os.path.exists(scratchpath):  # if the Scratch directory exists, it will be overwritten
@@ -585,7 +566,7 @@ class Tool(object):
                 arcpyAddError(f"Scratchordner nicht erstellt: {str(e)}")
         else:
             arcpy.AddMessage("Scratchordner existiert bereits und wird neu aufgesetzt.")
-            arcpy.Delete_management(scratchpath)
+            shutil.rmtree(scratchpath)
             os.makedirs(scratchpath)
 
         arcpy.env.scratchWorkspace = scratchpath
@@ -614,8 +595,9 @@ class Tool(object):
         rp_control = wpfc_qarray.max()  # extract the biggest vaule of the quotient of wp:fc to compare with the rp-factor
         water = ExtractByMask(Raster(r'{}\Gewaessermaske'.format(data)), basin)  # raster
         s_pre = s_init
-        p_data = r'{}\N_Zeitreihen'.format(data)  # table
-        #p_data = r'{}\N_Messstationen;'.format(data) + r'{}\N_Zeitreihen'.format(data)
+
+        # p_data = r'{}\N_Zeitreihen'.format(data)  # table
+
         cellsize = s_init.meanCellHeight
         arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "cellsize={}".format(cellsize))
         l_m = ExtractByMask(Raster(r'{}\L_in_metern'.format(data)), basin)  # raster
@@ -639,11 +621,11 @@ class Tool(object):
 
         for z in range(len(rp_factor)):
             arcpy.AddMessage("z={}".format(z))
-            arcpy.AddMessage("maximalwert von WP/FK={}".format(rp_control))
-            arcpy.AddMessage("gew?hlter RP-Parameter={}".format(rp_factor[z]))
+            arcpy.AddMessage("Maximalwert von WP/FK={}".format(rp_control))
+            arcpy.AddMessage("gewaehlter RP={}".format(rp_factor[z]))
             if rp_control >= rp_factor[z]:  # the AET is negative, if the rp-factor is smaller than the quotient of wp:fc
                 arcpy.AddMessage(
-                    "RP-Parameter ist kleiner als der Maximalwert von WP/FK. RP-Parameter = {} wird ?bersprungen.".format(
+                    "RP-Parameter ist kleiner als der Maximalwert von WP/FK. RP-Parameter = {} wird uebersprungen.".format(
                         rp_factor[z]))
                 continue  # skips all rp-factors smaller than the quotient of wp:fc
             rp = fc * rp_factor[z]
@@ -656,9 +638,9 @@ class Tool(object):
                 arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "parameter_day={}".format(parameter_day))
                 # creating a result table for each combination of variables
                 outname1 = "Q_rp{}_c{}_idw{}".format(int(rp_factor[z] * 100), int(c[y]), int(idw_exponent * 100))
-                arcpy.AddMessage("outname1={}".format(outname1))
+                #arcpy.AddMessage("outname1={}".format(outname1))
                 outname2 = "_s{}_e{}".format(int(start), int(end))
-                arcpy.AddMessage("outname2={}".format(outname2))
+                #arcpy.AddMessage("outname2={}".format(outname2))
                 result_path = arcpy.CreateTable_management(workpath, outname1)
                 arcpy.AddField_management(result_path, "Datum", "DATE")
                 arcpy.AddField_management(result_path, "Q", "DOUBLE")
@@ -787,7 +769,8 @@ class Tool(object):
         delete_raster(check_pet, check_aet, check_p, check_r, check_s, check_rs, check_ro, parameter_day, end)
         if check_raster_sum == True:
             delete_sum_raster(parameter_day, int(sum_end) - 1)
-        arcpy.Delete_management(result_path)
+        #arcpy.Delete_management(result_path)
+        shutil.rmtree(result_path)
         #arcpy.RefreshCatalog(workpath) #does not work with ArcGIS Pro
         arcpy.AddMessage(time.strftime("%H:%M:%S: ") + "Modellierung abgeschlossen.")
 
